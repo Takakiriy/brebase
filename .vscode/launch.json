@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Test",
+            "type": "bashdb",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_brebase.sh",
+            "cwd": "${workspaceFolder}",
+            "args": []
+        },
+        {
+            "name": "Main",
+            "type": "bashdb",
+            "request": "launch",
+            "program": "${workspaceFolder}/brebase",
+            "cwd": "${workspaceFolder}/_work",
+            "args": ["push"],
+            "env": {
+                "BREBASE_MAIN_BRANCH": "feature-1"
+            }
+        }
+    ]
+}
