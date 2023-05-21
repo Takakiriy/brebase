@@ -1,3 +1,5 @@
+[(Japanse)](./README-jp.md)
+
 # brebase
 
 `brebase` command do rebase git merge strategy
@@ -11,6 +13,7 @@ However, set the `BREBASE_MAIN_BRANCH` environment variable
 to the name of the main feature branch before running brebase.
 
 Exammple:
+
     ...
     $ git checkout  A   #// Working on A branch
     $ git commit -m "A1"
