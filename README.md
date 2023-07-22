@@ -6,13 +6,27 @@
 by `push` or `pull` sub command to local another branch
 like `git push|pull` command to|from remote repository.
 
+```mermaid
+graph LR;
+    F[my main feature branch]-->D[develop branch];
+    O[other feature branches]-->D;
+    subgraph local[my local]
+        A[branch A]--brebase push-->F;
+        B[branch B]--brebase push-->F;
+    end
+```
+
+Command:
+
+Set the `BREBASE_MAIN_BRANCH` environment variable
+to the name of the main feature branch
+and run `brebase` command.
+
     export BREBASE_MAIN_BRANCH=____
     brebase push  (or)  brebase pull
 
-However, set the `BREBASE_MAIN_BRANCH` environment variable
-to the name of the main feature branch before running brebase.
 
-Exammple:
+## Exammple
 
     ...
     $ git checkout  A   #// Working on A branch
@@ -49,14 +63,14 @@ Commit graph before `git commit`:
     git add .
     git commit -m "A1"
 
-Commit graph after `git commit`:
+Commit graph after `git commit` (new on the right):
 
     F - A
 
 
 ### When your branch A is AHEAD of main feature branch F
 
-Move feature branch F to the current commit position on branch A.
+If you run `brebase push` command, feature branch F moves to the current commit position on branch A.
 
 Commit graph before `brebase push`:
 
@@ -67,14 +81,14 @@ Commit graph before `brebase push`:
     $ export BREBASE_MAIN_BRANCH=F
     $ brebase push
 
-Commit graph after `brebase push`:
+Commit graph after `brebase push` (new on the right):
 
     o - F&A
 
 
 ### When your branch B is BEHIND main feature branch F
 
-Just warn. The exit code is 0 (successful).
+If you run `brebase push` command, just you will be warned. The exit code is 0 (successful).
 
 Commit graph before `git commit`:
 
@@ -108,6 +122,11 @@ Run `git rebase __BranchName__` を実行します。
 
 ### When not in conflict
 
+If you run the `brebase pull` command, current branch B will be merged
+from the latest commit of main feature branch F.
+This merge changes the contents of current branch B.
+`brebase pull` command calls `git rebase __MainFeatureBranchName__` internally.
+
 Commit graph before `brebase pull`:
 
         B
@@ -125,6 +144,8 @@ Commit graph after `brebase pull`:
             /
     o - F&A
 
+When you run the `brebase pull` command, you should also run `brebase push` command.
+
 `brebase push` command:
 
     $ export BREBASE_MAIN_BRANCH=F
@@ -135,6 +156,8 @@ Commit graph after `brebase push`:
     o - A - F&B
 
 ### When in conflict
+
+`brebase pull` command merges as much as possible and shows there are conflicts.
 
 Commit graph before `brebase pull`:
 
@@ -185,10 +208,10 @@ Commit graph after `brebase push`:
 
 ## Status command
 
-Run the `git status` command and
-display if `brebase push` or `brebase pull` command needs to be run.
+If you run `brebase status` command,
+it displays whether `brebase push` or `brebase pull` command needs to be run.
 Every messages are printed to standard output.
-The exit code is 0 (successful).
+The exit code is always 0 (successful).
 
     $ export BREBASE_MAIN_BRANCH=____
     $ brebase status
@@ -196,13 +219,30 @@ The exit code is 0 (successful).
     WARNING: Your branch is behind '____'. Hint: run "brebase pull" and "brebase push" command.
     Your branch is ahead of '____'. Hint: run "brebase push" command.
 
-If it is clean, nothing will be displayed.
+If current branch is at same position as main feature branch, nothing will be displayed.
 
     $ export BREBASE_MAIN_BRANCH=____
     $ brebase status
     $
 
+If current branch B is behind from main feature branch F:
+
+    B - F&A
+
+or current branch B is branched from main feature branch F:
+
+        B
+      /
+    o - F&A
+
+if you run the `brebase status` command in the above state,
+you will be warned that current branch is behind.
+
+    WARNING: Your branch is behind '____'. Hint: run "brebase pull" and "brebase push" command.
+
 When shell script branches, check the following phrase.
+Every messages are printed to standard output.
+The exit code is always 0 (successful).
 
     Your branch is behind
     Your branch is ahead
