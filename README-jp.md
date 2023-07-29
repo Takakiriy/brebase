@@ -8,8 +8,8 @@ graph LR;
     F[my main feature branch]-->D[develop branch];
     O[other feature branches]-->D;
     subgraph local[my local]
-        A[branch A]--brebase push-->F;
-        B[branch B]--brebase push-->F;
+        A[current sub branch A]--brebase push-->F;
+        B[sub branch B]--brebase push-->F;
     end
 ```
 
@@ -25,17 +25,17 @@ graph LR;
 ## サンプル
 
     ...
-    $ git checkout  A   #// A ブランチで作業
+    $ git checkout  A   #// 現在のブランチを A ブランチにします
     $ git commit -m "A1"
     $ export BREBASE_MAIN_BRANCH=F
-    $ brebase push  #// F ブランチへマージ
+    $ brebase push  #// 現在のブランチ A を F ブランチへマージ
     ...
     $ git commit -m "A2"
     $ brebase push
     WARNING: brebase push did not merge from "A" to "F", because "A" is behind "F".
         （訳） brebase push は A ブランチ から F ブランチ へマージしませんでした。なぜなら A は F より後ろにいるためです
-    $ brebase pull  #// F ブランチからマージ
-    $ brebase push  #// F ブランチへマージ
+    $ brebase pull  #// F ブランチから現在のブランチ A へマージ
+    $ brebase push  #// 現在のブランチ A を F ブランチへマージ
 
 
 <!-- TOC depthFrom:1 -->
@@ -111,16 +111,31 @@ graph LR;
 
 コミット グラフ は変化しません。
 
+        B
+      /
+    o - F&A
+
 `brebase pull` コマンド を実行する必要があります。
+
+
+### クリーン状態ではないとき
+
+`brebase push` コマンドを実行すると、
+Git ワーキング フォルダー がクリーン状態ではないという エラー メッセージ が表示されます。
+終了コードは 1 です。
+
+正しいブランチで `git commit` コマンド を実行するか、`git checkout "."` コマンド を実行してください。
 
 
 ## Pull コマンド
 
 `git rebase __BranchName__` を実行します。
 
+
 ### コンフリクトしないとき
 
-`brebase pull` コマンド を実行すると、現在のブランチ B を メイン フィーチャー ブランチ F
+`brebase pull` コマンド を実行すると、`git rebase __BranchName__` を実行します。
+現在のブランチ B を メイン フィーチャー ブランチ F
 の最新コミットから枝分かれするようにマージします。
 このマージによって現在のブランチ B の内容が変わります。
 内部で `git rebase __MainFeatureBranchName__` を実行しています。
@@ -153,9 +168,10 @@ graph LR;
 
     o - A - F&B
 
+
 ### コンフリクトするとき
 
-`brebase pull` コマンド を実行すると、
+`brebase pull` コマンド を実行すると、`git rebase __BranchName__` を実行します。
 可能な限りマージを行い、コンフリクトが発生したと表示されます。
 
 `brebase pull` する前の コミット グラフ:
@@ -196,6 +212,9 @@ graph LR;
             /
     o - F&A
 
+`brebase pull` コマンド（`git rebase __BranchName__` コマンド）の実行をキャンセルしたいときは、
+`git reflog` コマンドと `git reset --hard "HEAD@{____}"` コマンドを使います。
+
 `brebase push` コマンド:
 
     $ export BREBASE_MAIN_BRANCH=F
@@ -204,6 +223,16 @@ graph LR;
 `brebase push` した後 コミット グラフ:
 
     o - A - F&B
+
+
+### クリーン状態ではないとき
+
+`brebase pull` コマンドを実行すると、
+Git ワーキング フォルダー がクリーン状態ではないという エラー メッセージ が表示されます。
+終了コードは 1 です。
+
+正しいブランチで `git commit` コマンド を実行するか、`git checkout "."` コマンド を実行してください。
+
 
 ## Status コマンド
 
@@ -218,13 +247,19 @@ graph LR;
     WARNING: Your branch is behind '____'. Hint: run "brebase pull" and "brebase push" command.
     Your branch is ahead of '____'. Hint: run "brebase push" command.
 
-現在のブランチが メイン フィーチャー ブランチ と同じ位置なら何も表示されません。
+
+### 現在のブランチが メイン フィーチャー ブランチ と同じ位置にいるとき
+
+何も表示されません。
 
     $ export BREBASE_MAIN_BRANCH=____
     $ brebase status
     $
 
-現在のブランチ B が メイン フィーチャー ブランチ に先行されているとき:
+
+### 現在のブランチ B が メイン フィーチャー ブランチ に先行されているとき
+
+先行されているとき
 
     B - F&A
 
@@ -238,9 +273,22 @@ graph LR;
 
     WARNING: Your branch is behind '____'. Hint: run "brebase pull" and "brebase push" command.
 
-シェルスクリプトで分岐するときは、以下のフレーズの有無で判定してください。
+
+### クリーン状態ではないとき
+
+`brebase status` コマンドを実行すると、
+`git status` コマンドと同じ表示をします。
+終了コードは 0 です。
+
+
+### シェルスクリプトで分岐するとき
+
+以下のフレーズの有無で判定してください。
 すべて標準出力に出力されます。
 終了コードは常に 0（正常）です。
 
     Your branch is behind
+
+または
+
     Your branch is ahead

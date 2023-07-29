@@ -31,6 +31,10 @@ function  Main() {
 
 function  BrebasePush() {
     local  mainBranch="$1"
+    if [ "$(git status --short)" != "" ]; then
+        echo  "ERROR: Git working is not clean status"  >&2
+        exit  2
+    fi
     mainBranch="$(x="$( FillMainBranchIfNot "${mainBranch}" )" && echo "$x" || echo "(ERROR:$?)" )"
     ExitIfMatched  "${mainBranch}"  '^\(ERROR:([0-9]*)\)$'
     echo  "Merge to main feature branch: ${BREBASE_MAIN_BRANCH}"
@@ -53,6 +57,10 @@ function  BrebasePush() {
 
 function  BrebasePull() {
     local  mainBranch="$1"
+    if [ "$(git status --short)" != "" ]; then
+        echo  "ERROR: Git working is not clean status"  >&2
+        exit  2
+    fi
     mainBranch="$(x="$( FillMainBranchIfNot "${mainBranch}" )" && echo "$x" || echo "(ERROR:$?)" )"
     ExitIfMatched  "${mainBranch}"  '^\(ERROR:([0-9]*)\)$'
     echo  "Rebase from main feature branch: ${BREBASE_MAIN_BRANCH}"
@@ -151,58 +159,5 @@ function  Error() {
     echo  "${errorMessage}" >&2
     exit  "${exitCode}"
 }
-                    # pp
-                    #     Debug print
-                    # Example:
-                    #     pp "$config"
-                    #     pp "$config" config
-                    #     pp "$array" array  ${#array[@]}  "${array[@]}"
-                    #     pp "123"
-                    #     $( pp "$config" >&2 )
-                    function  pp() {
-                        local  value="$1"
-                        local  variableName="$2"
-                        if [ "${variableName}" != "" ]; then  variableName=" ${variableName} "  ;fi  #// Add spaces
-                        local  oldIFS="$IFS"
-                        IFS=$'\n'
-                        local  valueLines=( ${value} )
-                        IFS="$oldIFS"
-
-                        local  type=""
-                        if [ "${variableName}" != "" ]; then
-                            if [[ "$(declare -p ${variableName} 2>&1 )" =~ "declare -a" ]]; then
-                                local  type="array"
-                            fi
-                        fi
-                        if [ "${type}" == "" ]; then
-                            if [ "${#valueLines[@]}" == 1  -o  "${#valueLines[@]}" == 0 ]; then
-                                local  type="oneLine"
-                            else
-                                local  type="multiLine"
-                            fi
-                        fi
-
-                        if [[ "${type}" == "oneLine" ]]; then
-                            echo  "@@@${variableName}= \"${value}\" ---------------------------"  >&2
-                        elif [[ "${type}" == "multiLine" ]]; then
-                            echo  "@@@${variableName}---------------------------"  >&2
-                            echo  "\"${value}\"" >&2
-                        elif [[ "${type}" == "array" ]]; then
-                            echo  "@@@${variableName}---------------------------"  >&2
-                            local  count="$3"
-                            if [ "${count}" == "" ]; then
-                                echo  "[0]: \"$4\""  >&2
-                                echo  "[1]: ERROR: pp parameter is too few"  >&2
-                            else
-                                local  i=""
-                                for (( i = 0; i < ${count}; i += 1 ));do
-                                    echo  "[$i]: \"$4\""  >&2
-                                    shift
-                                done
-                            fi
-                        else
-                            echo  "@@@${variableName}? ---------------------------"  >&2
-                        fi
-                    }
 
 Main  "$@"

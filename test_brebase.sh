@@ -5,6 +5,7 @@ export BREBASE_MAIN_BRANCH="feature-1"  #// This value will be changed in test f
 function  Main() {
     TestPush
     TestPushNotMergeAndPull
+    TestNotClean
     TestConflict
     TestUndefinedMainBranch
     echo  "Pass"
@@ -91,9 +92,9 @@ function  TestPushNotMergeAndPull() {
             #//     o - F&A
 
         echo  '$ brebase push'
-        ../brebase push  2> "_err_out.log"  ||  Error
-        local  errOut="$( cat "_err_out.log" )"
-        rm  "_err_out.log"
+        ../brebase push  2> "../_err_out.log"  ||  Error
+        local  errOut="$( cat  "../_err_out.log" )"
+        rm  "../_err_out.log"
         echo  "${errOut}"
         local  status="$( ../brebase status )"
         echo "${status}"
@@ -177,6 +178,44 @@ function  TestPushNotMergeAndPull() {
     rm -rf  "_work"
 }
 
+function  TestNotClean() {
+    echo  ""
+    echo  "TestNotClean =================================="
+    ResetGitWorking  "_work"  "feature-1"
+    pushd   "_work" > /dev/null  ||  Error
+
+    echo  "a"  >  "a.txt"
+
+    #// push
+        echo  ""
+        echo  "$ brebase push"
+        local  oldCommitID="$( GetCommitID )"
+
+        ../brebase push  &&  Error
+        local  currentCommitID="$( GetCommitID )"
+        test  "${currentCommitID}" == "${oldCommitID}"  ||  Error
+        echo  "OK"
+
+    #// pull
+        echo  ""
+        echo  "$ brebase pull"
+
+        ../brebase pull  &&  Error
+        test  "$( cat  "a.txt" )" == "a"  ||  Error
+        echo  "OK"
+
+    #// status
+        echo  ""
+        echo  "$ brebase status"
+
+        local  status="$( ../brebase status  ||  echo "(ERROR)" )"
+        echo  "${status}"
+        $assert  echo "${status}"  |  grep  "(ERROR)" > /dev/null  &&  Error
+        $assert  echo "${status}"  |  grep  "Untracked files" > /dev/null  ||  Error
+    popd  > /dev/null
+    rm -rf  "_work"
+}
+
 function  TestConflict() {
     echo  ""
     echo  "TestConflict =================================="
@@ -212,7 +251,7 @@ function  TestConflict() {
         git commit -m "B1"
 
         echo  '$ brebase push'
-        ../brebase push  2>&1 > "_err_out.log"  ||  Error  #// Not merge
+        ../brebase push  ||  Error  #// Not merge
             #// Commit graph:
             #//         B
             #//       /

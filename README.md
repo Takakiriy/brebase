@@ -11,8 +11,8 @@ graph LR;
     F[my main feature branch]-->D[develop branch];
     O[other feature branches]-->D;
     subgraph local[my local]
-        A[branch A]--brebase push-->F;
-        B[branch B]--brebase push-->F;
+        A[current sub branch A]--brebase push-->F;
+        B[sub branch B]--brebase push-->F;
     end
 ```
 
@@ -29,16 +29,16 @@ and run `brebase` command.
 ## Exammple
 
     ...
-    $ git checkout  A   #// Working on A branch
+    $ git checkout  A   #// Change current branch to A branch
     $ git commit -m "A1"
     $ export BREBASE_MAIN_BRANCH=F
-    $ brebase push  #// Merge to F branch
+    $ brebase push  #// Merge from current branch A to F branch
     ...
     $ git commit -m "A2"
     $ brebase push
     WARNING: brebase push did not merge from "A" to "F", because "A" is behind "F".
-    $ brebase pull  #// Merge from F branch
-    $ brebase push  #// Merge to F branch
+    $ brebase pull  #// Merge from F branch to current branch A
+    $ brebase push  #// Merge from current branch A to F branch
 
 
 <!-- TOC depthFrom:1 -->
@@ -113,17 +113,30 @@ Commit graph after `git commit` before `brebase push`:
 
 Commit graph is not changed.
 
+        B
+      /
+    o - F&A
+
 You must run `brebase pull` commad.
+
+
+### When not clean status
+
+`brebase push` command shows an error message that Git working folder is not clean status.
+The exit code is 1.
+
+Please, run `git commit` command in correct branch or run `git checkout "."` command.
 
 
 ## Pull command
 
 Run `git rebase __BranchName__` を実行します。
 
+
 ### When not in conflict
 
-If you run the `brebase pull` command, current branch B will be merged
-from the latest commit of main feature branch F.
+If you run the `brebase pull` command, `git rebase __BranchName__` is executed.
+It changes current branch B merged from the latest commit of main feature branch F.
 This merge changes the contents of current branch B.
 `brebase pull` command calls `git rebase __MainFeatureBranchName__` internally.
 
@@ -155,8 +168,10 @@ Commit graph after `brebase push`:
 
     o - A - F&B
 
+
 ### When in conflict
 
+If you run the `brebase pull` command, `git rebase __BranchName__` is executed.
 `brebase pull` command merges as much as possible and shows there are conflicts.
 
 Commit graph before `brebase pull`:
@@ -197,6 +212,9 @@ Commit graph after `git rebase --continue`:
             /
     o - F&A
 
+If you want to cancel the `brebase pull` command (`git rebase __BranchName__` command),
+Use the `git reflog` and `git reset --hard "HEAD@{____}"` commands.
+
 `brebase push` command:
 
     $ export BREBASE_MAIN_BRANCH=F
@@ -205,6 +223,15 @@ Commit graph after `git rebase --continue`:
 Commit graph after `brebase push`:
 
     o - A - F&B
+
+
+### When not clean status
+
+`brebase pull` command shows an error message that Git working folder is not clean status.
+The exit code is 1.
+
+Please, run `git commit` command in correct branch or run `git checkout "."` command.
+
 
 ## Status command
 
@@ -219,13 +246,17 @@ The exit code is always 0 (successful).
     WARNING: Your branch is behind '____'. Hint: run "brebase pull" and "brebase push" command.
     Your branch is ahead of '____'. Hint: run "brebase push" command.
 
-If current branch is at same position as main feature branch, nothing will be displayed.
+### If current branch is at same position as main feature branch
+
+Nothing will be displayed.
 
     $ export BREBASE_MAIN_BRANCH=____
     $ brebase status
     $
 
-If current branch B is behind from main feature branch F:
+### If current branch B is behind from main feature branch F
+
+If current branch B is behind
 
     B - F&A
 
@@ -240,9 +271,21 @@ you will be warned that current branch is behind.
 
     WARNING: Your branch is behind '____'. Hint: run "brebase pull" and "brebase push" command.
 
-When shell script branches, check the following phrase.
+
+### When not clean status
+
+`brebase status` command shows an error message that Git working folder is not clean status.
+The exit code is 0.
+
+
+### When shell script branches
+
+Check the following phrase.
 Every messages are printed to standard output.
 The exit code is always 0 (successful).
 
     Your branch is behind
+
+or
+
     Your branch is ahead
