@@ -26,7 +26,7 @@ and run `brebase` command.
     brebase push  (or)  brebase pull
 
 
-## Exammple
+## Example
 
     ...
     $ git checkout  A   #// Change current branch to A branch
